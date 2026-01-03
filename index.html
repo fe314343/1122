@@ -1,188 +1,217 @@
-import React, { useState } from 'react';
-import { Package, Truck, Building2, Send, CheckCircle2, AlertCircle, Loader2, Info } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>藥劑配送需求系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .animate-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-100">
+    <div id="root"></div>
 
-// --- 關鍵步驟：請務必填入您的「網頁應用程式 URL」 ---
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx0_SesWC5mmxwUqfBovtyk-6jnlMJgJ9eFn1FF9H5q6QOR3SVOJgOd9pFsPZIlSUBC/exec"; 
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-const App = () => {
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [formData, setFormData] = useState({
-    companyName: '',
-    K1: 0, L1: 0, MC2: 0, S1: 0,
-    brownCarbon: 0, 
-    blackCarbon: 0, 
-    FB: 0,
-    polymer: 0
-  });
+        // --- 關鍵步驟：請確保此 URL 與您的 Google Apps Script 一致 ---
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx0_SesWC5mmxwUqfBovtyk-6jnlMJgJ9eFn1FF9H5q6QOR3SVOJgOd9pFsPZIlSUBC/exec";
 
-  const handleInputChange = (field, value) => {
-    const val = Math.max(0, parseInt(value) || 0);
-    setFormData(prev => ({ ...prev, [field]: val }));
-  };
+        const App = () => {
+            const [step, setStep] = useState(1);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState("");
+            const [formData, setFormData] = useState({
+                companyName: '',
+                K1: 0, L1: 0, MC2: 0, S1: 0,
+                brownCarbon: 0, 
+                blackCarbon: 0, 
+                FB: 0,
+                polymer: 0
+            });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.companyName.trim()) {
-      setError("請先輸入公司名稱");
-      return;
-    }
+            const handleInputChange = (field, value) => {
+                const val = Math.max(0, parseInt(value) || 0);
+                setFormData(prev => ({ ...prev, [field]: val }));
+            };
 
-    setLoading(true);
-    setError("");
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!formData.companyName.trim()) {
+                    setError("請先輸入公司名稱");
+                    return;
+                }
 
-    try {
-      // 構建 URLSearchParams 以匹配後端的 e.parameter
-      const params = new URLSearchParams();
-      Object.keys(formData).forEach(key => {
-        params.append(key, formData[key]);
-      });
+                setLoading(true);
+                setError("");
 
-      // 發送請求
-      await fetch(WEB_APP_URL, {
-        method: 'POST',
-        mode: 'no-cors', 
-        cache: 'no-cache',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: params.toString()
-      });
-      
-      // 因為是 no-cors，請求發出後我們直接視為成功
-      setStep(3);
-    } catch (err) {
-      console.error("傳送失敗:", err);
-      setError("連線異常，請確認您的網路狀況。");
-    } finally {
-      setLoading(false);
-    }
-  };
+                try {
+                    const params = new URLSearchParams();
+                    Object.keys(formData).forEach(key => {
+                        params.append(key, formData[key]);
+                    });
 
-  const renderNumberInput = (label, weight, field, unit) => (
-    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-3 border border-gray-100 transition-all hover:border-blue-200 shadow-sm">
-      <div className="flex flex-col text-left">
-        <span className="font-semibold text-gray-700">{label}</span>
-        <span className="text-[10px] text-blue-500 font-bold tracking-wider">{weight}</span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <button 
-          type="button"
-          onClick={() => handleInputChange(field, formData[field] - 1)}
-          className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-all shadow-sm font-bold"
-        >-</button>
-        <input
-          type="number"
-          value={formData[field]}
-          onChange={(e) => handleInputChange(field, e.target.value)}
-          className="w-12 text-center bg-transparent font-bold text-blue-600 focus:outline-none text-lg"
-        />
-        <button 
-          type="button"
-          onClick={() => handleInputChange(field, formData[field] + 1)}
-          className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-all shadow-sm font-bold"
-        >+</button>
-        <span className="text-xs text-gray-400 w-6 text-right font-medium">{unit}</span>
-      </div>
-    </div>
-  );
+                    await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', 
+                        cache: 'no-cache',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: params.toString()
+                    });
+                    
+                    setStep(3);
+                } catch (err) {
+                    console.error("傳送失敗:", err);
+                    setError("連線異常，請確認您的網路狀況。");
+                } finally {
+                    setLoading(false);
+                }
+            };
 
-  return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 font-sans text-slate-900">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden transition-all border border-gray-100">
-        
-        <div className="bg-gradient-to-br from-blue-700 to-indigo-900 p-8 text-white relative">
-          <Truck className="absolute right-6 top-6 opacity-20 w-16 h-16" />
-          <h1 className="text-2xl font-black mb-1 tracking-tight">藥劑配送需求系統</h1>
-          <p className="text-blue-100 opacity-80 text-xs font-medium uppercase tracking-widest">Digital Supply Chain Management</p>
-        </div>
-
-        <div className="p-8">
-          {step === 1 && (
-            <div className="space-y-6 text-left animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center space-x-2 text-indigo-600 mb-2 font-bold">
-                <Building2 size={20} />
-                <span>公司名稱</span>
-              </div>
-              <input
-                type="text"
-                placeholder="請輸入公司名稱"
-                className="w-full p-4 pl-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-500 outline-none transition-all text-lg font-medium shadow-inner"
-                value={formData.companyName}
-                onChange={(e) => setFormData({...formData, companyName: e.target.value})}
-              />
-              <button
-                onClick={() => formData.companyName.trim() ? setStep(2) : setError("請輸入公司名稱")}
-                className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 flex items-center justify-center"
-              >
-                下一步：填寫數量
-              </button>
-              {error && <p className="text-red-500 text-sm text-center font-bold bg-red-50 p-3 rounded-xl border border-red-100">{error}</p>}
-            </div>
-          )}
-
-          {step === 2 && (
-            <form onSubmit={handleSubmit} className="space-y-6 animate-in slide-in-from-right duration-500">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-indigo-600 font-bold">
-                  <Package size={20} />
-                  <span className="truncate max-w-[200px]">{formData.companyName}</span>
+            const renderNumberInput = (label, weight, field, unit) => (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-3 border border-gray-100 transition-all hover:border-blue-200 shadow-sm">
+                    <div className="flex flex-col text-left">
+                        <span className="font-semibold text-gray-700">{label}</span>
+                        <span className="text-[10px] text-blue-500 font-bold tracking-wider">{weight}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <button 
+                            type="button"
+                            onClick={() => handleInputChange(field, formData[field] - 1)}
+                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-all shadow-sm font-bold"
+                        >-</button>
+                        <input
+                            type="number"
+                            value={formData[field]}
+                            onChange={(e) => handleInputChange(field, e.target.value)}
+                            className="w-12 text-center bg-transparent font-bold text-blue-600 focus:outline-none text-lg"
+                        />
+                        <button 
+                            type="button"
+                            onClick={() => handleInputChange(field, formData[field] + 1)}
+                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-all shadow-sm font-bold"
+                        >+</button>
+                        <span className="text-xs text-gray-400 w-6 text-right font-medium">{unit}</span>
+                    </div>
                 </div>
-                <button type="button" onClick={() => setStep(1)} className="text-[10px] text-gray-400 underline">修改</button>
-              </div>
+            );
 
-              <div className="space-y-1">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1 text-left">藥劑 (桶裝)</h3>
-                {renderNumberInput("K1 藥劑", "25kg / 桶", "K1", "桶")}
-                {renderNumberInput("L1 藥劑", "25kg / 桶", "L1", "桶")}
-                {renderNumberInput("MC2 藥劑", "30kg / 桶", "MC2", "桶")}
-                {renderNumberInput("S1 藥劑", "25kg / 桶", "S1", "桶")}
-              </div>
+            return (
+                <div className="min-h-screen flex items-center justify-center p-4">
+                    <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+                        
+                        <div className="bg-gradient-to-br from-blue-700 to-indigo-900 p-8 text-white relative">
+                            <i data-lucide="truck" class="absolute right-6 top-6 opacity-20 w-16 h-16"></i>
+                            <h1 className="text-2xl font-black mb-1 tracking-tight">藥劑配送需求系統</h1>
+                            <p className="text-blue-100 opacity-80 text-xs font-medium uppercase tracking-widest">Digital Supply Chain Management</p>
+                        </div>
 
-              <div className="space-y-1 mt-6">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1 text-left">活性碳 (包裝)</h3>
-                {renderNumberInput("牛皮紙活性碳", "20kg / 包", "brownCarbon", "包")}
-                {renderNumberInput("黑色活性碳", "20kg / 包", "blackCarbon", "包")}
-                {renderNumberInput("FB", "25kg / 包", "FB", "包")}
-                {renderNumberInput("高分子", "25kg / 包", "polymer", "包")}
-              </div>
+                        <div className="p-8">
+                            {step === 1 && (
+                                <div className="space-y-6 text-left animate-in">
+                                    <div className="flex items-center space-x-2 text-indigo-600 mb-2 font-bold">
+                                        <i data-lucide="building-2" class="w-5 h-5"></i>
+                                        <span>公司名稱</span>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="請輸入公司名稱"
+                                        className="w-full p-4 pl-5 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-500 outline-none transition-all text-lg font-medium shadow-inner"
+                                        value={formData.companyName}
+                                        onChange={(e) => setFormData({...formData, companyName: e.target.value})}
+                                    />
+                                    <button
+                                        onClick={() => formData.companyName.trim() ? setStep(2) : setError("請輸入公司名稱")}
+                                        className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 flex items-center justify-center"
+                                    >
+                                        下一步：填寫數量
+                                    </button>
+                                    {error && <p className="text-red-500 text-sm text-center font-bold bg-red-50 p-3 rounded-xl border border-red-100">{error}</p>}
+                                </div>
+                            )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-xl ${
-                  loading ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                }`}
-              >
-                {loading ? <Loader2 className="animate-spin" /> : <Send size={20} />}
-                <span>{loading ? "傳送中..." : "確認並送出"}</span>
-              </button>
-            </form>
-          )}
+                            {step === 2 && (
+                                <form onSubmit={handleSubmit} className="space-y-6 animate-in">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-2 text-indigo-600 font-bold">
+                                            <i data-lucide="package" class="w-5 h-5"></i>
+                                            <span className="truncate max-w-[200px]">{formData.companyName}</span>
+                                        </div>
+                                        <button type="button" onClick={() => setStep(1)} className="text-[10px] text-gray-400 underline">修改</button>
+                                    </div>
 
-          {step === 3 && (
-            <div className="text-center py-10 space-y-6 animate-in zoom-in duration-500">
-              <div className="flex justify-center text-green-500">
-                <CheckCircle2 size={64} />
-              </div>
-              <h2 className="text-2xl font-black text-gray-800">送出成功</h2>
-              <p className="text-gray-500 text-sm leading-relaxed px-4">
-                資料已記錄至 Excel。<br />
-                <span className="text-indigo-600 font-bold">{formData.companyName}</span> 的需求已接收。
-              </p>
-              <button
-                onClick={() => { setFormData({ companyName: '', K1: 0, L1: 0, MC2: 0, S1: 0, brownCarbon: 0, blackCarbon: 0, FB: 0, polymer: 0 }); setStep(1); }}
-                className="w-full bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all"
-              >
-                回首頁
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+                                    <div className="space-y-1">
+                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1 text-left">藥劑 (桶裝)</h3>
+                                        {renderNumberInput("K1 藥劑", "25kg / 桶", "K1", "桶")}
+                                        {renderNumberInput("L1 藥劑", "25kg / 桶", "L1", "桶")}
+                                        {renderNumberInput("MC2 藥劑", "30kg / 桶", "MC2", "桶")}
+                                        {renderNumberInput("S1 藥劑", "25kg / 桶", "S1", "桶")}
+                                    </div>
 
-export default App;
+                                    <div className="space-y-1 mt-6">
+                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1 text-left">活性碳 (包裝)</h3>
+                                        {renderNumberInput("牛皮紙活性碳", "20kg / 包", "brownCarbon", "包")}
+                                        {renderNumberInput("黑色活性碳", "20kg / 包", "blackCarbon", "包")}
+                                        {renderNumberInput("FB", "25kg / 包", "FB", "包")}
+                                        {renderNumberInput("高分子", "25kg / 包", "polymer", "包")}
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-xl ${
+                                            loading ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                        }`}
+                                    >
+                                        {loading ? <span className="animate-spin">🌀</span> : <i data-lucide="send" class="w-5 h-5"></i>}
+                                        <span>{loading ? "傳送中..." : "確認並送出"}</span>
+                                    </button>
+                                </form>
+                            )}
+
+                            {step === 3 && (
+                                <div className="text-center py-10 space-y-6 animate-in">
+                                    <div className="flex justify-center text-green-500">
+                                        <i data-lucide="check-circle-2" class="w-16 h-16"></i>
+                                    </div>
+                                    <h2 className="text-2xl font-black text-gray-800">送出成功</h2>
+                                    <p className="text-gray-500 text-sm leading-relaxed px-4">
+                                        資料已記錄至 Excel。<br />
+                                        <span className="text-indigo-600 font-bold">{formData.companyName}</span> 的需求已接收。
+                                    </p>
+                                    <button
+                                        onClick={() => { setFormData({ companyName: '', K1: 0, L1: 0, MC2: 0, S1: 0, brownCarbon: 0, blackCarbon: 0, FB: 0, polymer: 0 }); setStep(1); }}
+                                        className="w-full bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all"
+                                    >
+                                        回首頁
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+        // Initialize icons after React render
+        setTimeout(() => lucide.createIcons(), 500);
+    </script>
+</body>
+</html>
