@@ -11,8 +11,6 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- 載入 Babel 用於瀏覽器端解析 JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- 載入 Lucide 圖示 -->
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; }
@@ -28,6 +26,25 @@
 
         // --- 關鍵步驟：請確保此 URL 與您的 Google Apps Script 一致 ---
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyPSaG2bGsMvsHmMRQy9jQVMQdQ08Ws4oyiZZL-AQbNF6BXRdN6dOEqQQMV0XMe8gLZ/exec";
+
+        // 內嵌 SVG 圖示組件，避免與外部腳本衝突
+        const Icons = {
+            Truck: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-5l-4-4h-3v10a2 2 0 0 0 2 2Z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+            ),
+            Building: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+            ),
+            Package: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16.5 9.4 7.5 4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>
+            ),
+            Send: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" x2="11" y1="2" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            ),
+            CheckCircle: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            )
+        };
 
         const App = () => {
             const [step, setStep] = useState(1);
@@ -92,7 +109,7 @@
                         <button 
                             type="button"
                             onClick={() => handleInputChange(field, formData[field] - 1)}
-                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-all shadow-sm font-bold"
+                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-all shadow-sm font-bold"
                         >-</button>
                         <input
                             type="number"
@@ -103,7 +120,7 @@
                         <button 
                             type="button"
                             onClick={() => handleInputChange(field, formData[field] + 1)}
-                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-all shadow-sm font-bold"
+                            className="w-10 h-10 flex items-center justify-center bg-white border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-all shadow-sm font-bold"
                         >+</button>
                         <span className="text-sm text-gray-400 w-6 text-right font-medium">{unit}</span>
                     </div>
@@ -115,7 +132,9 @@
                     <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
                         
                         <div className="bg-gradient-to-br from-blue-700 to-indigo-900 p-8 text-white relative">
-                            <i data-lucide="truck" className="absolute right-6 top-6 opacity-20 w-16 h-16"></i>
+                            <div className="absolute right-6 top-6 opacity-20 w-16 h-16">
+                                <Icons.Truck />
+                            </div>
                             <h1 className="text-2xl font-black mb-1 tracking-tight">藥劑配送需求系統</h1>
                             <p className="text-blue-100 opacity-80 text-xs font-medium uppercase tracking-widest">Digital Supply Chain Management</p>
                         </div>
@@ -124,7 +143,7 @@
                             {step === 1 && (
                                 <div className="space-y-6 text-left animate-in">
                                     <div className="flex items-center space-x-2 text-indigo-600 mb-2 font-bold">
-                                        <i data-lucide="building-2" className="w-5 h-5"></i>
+                                        <div className="w-5 h-5"><Icons.Building /></div>
                                         <span>請輸入您的公司名稱</span>
                                     </div>
                                     <input
@@ -148,7 +167,7 @@
                                 <form onSubmit={handleSubmit} className="space-y-6 animate-in">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center space-x-2 text-indigo-600 font-bold">
-                                            <i data-lucide="package" className="w-5 h-5"></i>
+                                            <div className="w-5 h-5 text-indigo-600"><Icons.Package /></div>
                                             <span className="truncate max-w-[200px]">{formData.companyName}</span>
                                         </div>
                                         <button type="button" onClick={() => setStep(1)} className="text-[10px] text-gray-400 underline uppercase tracking-tighter">修改名稱</button>
@@ -177,7 +196,7 @@
                                             loading ? 'bg-gray-400 cursor-wait' : 'bg-indigo-600 hover:bg-indigo-700 text-white active:scale-[0.98]'
                                         }`}
                                     >
-                                        {loading ? <span className="animate-spin text-xl">🌀</span> : <i data-lucide="send" className="w-5 h-5"></i>}
+                                        {loading ? <span className="animate-spin text-xl">🌀</span> : <div className="w-5 h-5"><Icons.Send /></div>}
                                         <span>{loading ? "正在同步資料至 Excel..." : "確認並送出申請"}</span>
                                     </button>
                                 </form>
@@ -186,7 +205,7 @@
                             {step === 3 && (
                                 <div className="text-center py-10 space-y-6 animate-in">
                                     <div className="flex justify-center text-green-500">
-                                        <i data-lucide="check-circle-2" className="w-16 h-16"></i>
+                                        <div className="w-16 h-16"><Icons.CheckCircle /></div>
                                     </div>
                                     <div>
                                         <h2 className="text-2xl font-black text-gray-800">申請送出成功！</h2>
@@ -212,18 +231,8 @@
             );
         };
 
-        // 初始化 React 並掛載
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
-
-        // 確保圖示在 DOM 載入後初始化
-        const initIcons = () => {
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
-        };
-        // 在組件渲染後持續檢查並更新圖示
-        setInterval(initIcons, 1000);
     </script>
 </body>
 </html>
