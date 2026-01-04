@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- 強制軟體化標籤 -->
+    <!-- 強制軟體化標籤 (隱藏瀏覽器網址列與工具列的關鍵) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="藥劑配送">
@@ -13,11 +13,11 @@
     
     <title>藥劑配送管理系統</title>
     
-    <!-- PWA Manifest 設定 (使用您上傳的圖片作為圖示) -->
-    <link rel="manifest" href='data:application/manifest+json,{"name":"藥劑配送系統","short_name":"藥劑配送","start_url":".","display":"standalone","orientation":"portrait","background_color":"#1e3a8a","theme_color":"#1e3a8a","icons":[{"src":"0B5915F8-F88F-4653-AC6C-54FBE1D2ACCF.jpg","sizes":"512x512","type":"image/jpeg"}]}'>
+    <!-- PWA Manifest 設定 (強制獨立顯示與範圍鎖定) -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"藥劑配送系統","short_name":"藥劑配送","start_url":".","display":"standalone","scope":".","orientation":"portrait","background_color":"#1e3a8a","theme_color":"#1e3a8a","icons":[{"src":"0B5915F8-F88F-4653-AC6C-54FBE1D2ACCF.jpg","sizes":"512x512","type":"image/jpeg"}]}'>
     
-    <!-- 設定 iOS 桌面圖示 -->
-    <link rel="apple-touch-icon" href="0B5915F8-F88F-4653-AC6C-54FBE1D2ACCF.png">
+    <!-- iOS 桌面圖示 -->
+    <link rel="apple-touch-icon" href="0B5915F8-F88F-4653-AC6C-54FBE1D2ACCF.jpg">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -40,6 +40,7 @@
             padding: 0;
         }
         
+        /* 徹底模擬原生軟體感：禁止滾動回彈與強制全螢幕佈局 */
         html, body {
             overflow: hidden;
             height: 100%;
@@ -70,6 +71,11 @@
 </head>
 <body class="bg-slate-100">
     <div id="root"></div>
+
+    <!-- 獨立軟體鎖定指令碼：防止在 standalone 模式下點擊連結跳轉至預設瀏覽器 -->
+    <script>
+        (function(a,b,c){if(c in b&&b[c]){var d,e=a.location,f=/^(a|html)$/i;a.addEventListener("click",function(a){d=a.target;while(!f.test(d.nodeName))d=d.parentNode;"href"in d&&(d.href.indexOf("http")||~d.href.indexOf(e.host))&&(a.preventDefault(),e.href=d.href)},!1)}})(document,window.navigator,"standalone");
+    </script>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -118,6 +124,7 @@
                 const inApp = (ua.indexOf("Line") > -1) || (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Instagram") > -1);
                 setIsInAppBrowser(inApp);
 
+                // 偵測是否已進入獨立軟體模式 (Standalone)
                 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
                 if (!isStandalone) {
                     setShowPwaTip(true);
@@ -151,10 +158,10 @@
             };
 
             const renderInput = (label, weight, field) => (
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl mb-3 border border-gray-100 shadow-sm">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl mb-3 border border-gray-100 shadow-sm transition-all active:bg-blue-50">
                     <div className="flex flex-col text-left">
                         <span className="font-bold text-gray-700">{label}</span>
-                        <span className="text-[10px] text-blue-500 font-bold uppercase">{weight}</span>
+                        <span className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">{weight}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                         <button type="button" onClick={() => setFormData({...formData, [field]: Math.max(0, formData[field] - 1)})} className="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-xl shadow-sm font-bold active:bg-gray-100 active:scale-90 transition-all text-xl">-</button>
@@ -166,38 +173,40 @@
 
             return (
                 <div className="flex flex-col h-full bg-slate-100">
-                    {/* App 內瀏覽器專用提示 (LINE/FB 使用者會看到這個) */}
+                    {/* LINE/FB 偵測提示：這類環境不支援 PWA，必須引導至瀏覽器 */}
                     {isInAppBrowser && (
                         <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md p-10 flex flex-col items-center justify-center text-white text-center">
                             <div className="absolute top-4 right-4 bounce-hint text-indigo-400">
                                 <Icons.External />
                             </div>
-                            <h2 className="text-2xl font-black mb-4">請使用瀏覽器開啟</h2>
-                            <p className="text-gray-300 mb-8 leading-relaxed">LINE/FB 內建瀏覽器不支援 App 安裝功能。<br/>請點擊右上角「...」並選擇「在瀏覽器開啟」。</p>
-                            <button onClick={() => setIsInAppBrowser(false)} className="px-8 py-3 bg-indigo-600 rounded-xl font-bold">我知道了</button>
+                            <h2 className="text-2xl font-black mb-4">無法在此開啟軟體</h2>
+                            <p className="text-gray-300 mb-8 leading-relaxed">LINE/FB 內部會限制 App 模式。<br/>請點擊右上角「...」或「分享」，選擇<strong>「在瀏覽器開啟」</strong>，之後才能安裝至桌面。</p>
+                            <button onClick={() => setIsInAppBrowser(false)} className="px-10 py-4 bg-indigo-600 rounded-2xl font-bold shadow-xl active:scale-95 transition-all">我知道了</button>
                         </div>
                     )}
 
                     {/* 安裝導引視窗 */}
                     {showInstallModal && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-md transition-all">
-                            <div className="bg-white w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl fade-in-overlay relative text-left">
-                                <button onClick={() => setShowInstallModal(false)} className="absolute right-4 top-4 text-gray-400 p-2"><Icons.Close /></button>
+                            <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl fade-in-overlay relative text-left">
+                                <button onClick={() => setShowInstallModal(false)} className="absolute right-6 top-6 text-gray-400 p-2"><Icons.Close /></button>
                                 <div className="p-8 text-center">
-                                    <div className="w-20 h-20 rounded-3xl overflow-hidden mx-auto mb-6 shadow-lg border-4 border-white flex items-center justify-center"><AppIcon className="w-full h-full" /></div>
-                                    <h2 className="text-xl font-black text-gray-800 mb-2">安裝藥劑系統</h2>
-                                    <p className="text-gray-500 text-sm mb-8 leading-relaxed">安裝後將隱藏網址列，體驗更順暢。</p>
-                                    <div className="space-y-6 text-left">
+                                    <div className="w-20 h-20 rounded-3xl overflow-hidden mx-auto mb-6 shadow-lg border-4 border-white flex items-center justify-center bg-blue-800"><AppIcon className="w-full h-full" /></div>
+                                    <h2 className="text-xl font-black text-gray-800 mb-2">安裝為手機軟體</h2>
+                                    <p className="text-gray-500 text-sm mb-8 leading-relaxed italic">安裝至桌面後，開啟時將完全隱藏網址列，反應更快速。</p>
+                                    <div className="space-y-6 text-left border-t border-slate-50 pt-6">
                                         <div className="flex items-start gap-4">
                                             <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 font-bold text-sm">1</div>
-                                            <p className="text-sm text-gray-600 leading-relaxed font-medium">點擊瀏覽器工具列的 <strong>分享</strong> 或 <strong>選單</strong> 按鈕</p>
+                                            <p className="text-sm text-gray-600 leading-relaxed font-medium">點擊瀏覽器工具列的 <strong>分享</strong> 或 <strong>選單</strong></p>
                                         </div>
                                         <div className="flex items-start gap-4">
                                             <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 font-bold text-sm">2</div>
-                                            <p className="text-sm text-gray-600 leading-relaxed font-medium">點擊 <strong>「加入主畫面」</strong> 或 <strong>「安裝 App」</strong></p>
+                                            <p className="text-sm text-gray-600 leading-relaxed font-medium">選擇 <strong>「加入主畫面」</strong> 並開啟它</p>
                                         </div>
                                     </div>
-                                    <button onClick={() => setShowInstallModal(false)} className="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl mt-8 shadow-xl">開始安裝</button>
+                                    <button onClick={() => setShowInstallModal(false)} className="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl mt-8 shadow-xl active:scale-95 transition-all">
+                                        準備安裝
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -208,13 +217,14 @@
                             <div className="bg-gradient-to-br from-blue-700 to-indigo-900 p-8 text-white relative text-left flex-shrink-0">
                                 <div className="absolute right-6 top-6 w-20 h-20 overflow-hidden rounded-2xl shadow-lg border-2 border-white/30 flex items-center justify-center bg-blue-800"><AppIcon className="w-full h-full" /></div>
                                 <h1 className="text-3xl font-black mb-1 tracking-tight">藥劑配送</h1>
-                                <p className="text-blue-100 opacity-80 text-xs font-medium uppercase tracking-widest">v3.0 Stability Edition</p>
+                                <p className="text-blue-100 opacity-80 text-xs font-medium uppercase tracking-widest">App Shell Mode</p>
                             </div>
 
+                            {/* 只有在非獨立模式開啟時，才會顯示這條安裝引導 */}
                             {showPwaTip && step === 1 && (
-                                <div onClick={() => setShowInstallModal(true)} className="bg-indigo-600 p-4 flex items-center justify-between text-white text-xs font-bold animate-in cursor-pointer hover:bg-indigo-700 transition-colors flex-shrink-0 shadow-lg">
-                                    <div className="flex items-center gap-3"><Icons.Smartphone /><span>安裝為獨立軟體 (隱藏網址列)</span></div>
-                                    <span className="bg-white/20 px-2 py-1 rounded-lg">引導 ➜</span>
+                                <div onClick={() => setShowInstallModal(true)} className="bg-amber-500 p-4 flex items-center justify-between text-white text-xs font-bold animate-in cursor-pointer hover:bg-amber-600 transition-colors flex-shrink-0 shadow-lg">
+                                    <div className="flex items-center gap-3"><Icons.Smartphone /><span>安裝為專屬軟體 (隱藏網址列)</span></div>
+                                    <span className="bg-white/20 px-2 py-1 rounded-lg">點此引導 ➜</span>
                                 </div>
                             )}
 
@@ -222,7 +232,7 @@
                                 {step === 1 && (
                                     <div className="space-y-6 text-left animate-in">
                                         <div className="flex items-center space-x-2 text-indigo-600 font-bold"><Icons.Building /><span>身分確認</span></div>
-                                        <input type="text" placeholder="輸入公司名稱" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 text-lg font-medium shadow-inner transition-all" value={formData.companyName} onChange={(e) => setFormData({...formData, companyName: e.target.value})} />
+                                        <input type="text" placeholder="公司名稱" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white text-lg font-medium shadow-inner transition-all" value={formData.companyName} onChange={(e) => setFormData({...formData, companyName: e.target.value})} />
                                         <div className="grid grid-cols-1 gap-4">
                                             <button onClick={() => formData.companyName.trim() ? setStep(2) : setError("請輸入公司名稱")} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold shadow-xl active:scale-[0.98] transition-all h-16 text-lg">下一步</button>
                                             <button onClick={fetchHistory} disabled={loading} className="w-full bg-white text-indigo-600 border-2 border-indigo-50 py-5 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-all h-16 text-lg shadow-sm">{loading ? "🌀 查詢中..." : <Icons.History />}<span>歷史紀錄</span></button>
@@ -238,25 +248,25 @@
                                             <button type="button" onClick={() => setStep(1)} className="text-sm font-bold text-slate-400 underline decoration-2 underline-offset-4">返回</button>
                                         </div>
                                         <div className="max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
-                                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">藥劑產品 (桶裝)</h3>
+                                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">藥劑類 (桶)</h3>
                                             {renderInput("K1 藥劑", "25kg", "K1")}
                                             {renderInput("L1 藥劑", "25kg", "L1")}
                                             {renderInput("MC2 藥劑", "30kg", "MC2")}
                                             {renderInput("S1 藥劑", "25kg", "S1")}
-                                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mt-8 mb-4 ml-1">粉劑類 (包裝)</h3>
+                                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mt-8 mb-4 ml-1">粉劑類 (包)</h3>
                                             {renderInput("牛皮紙活性碳", "20kg", "brownCarbon")}
                                             {renderInput("黑色活性碳", "20kg", "blackCarbon")}
                                             {renderInput("FB", "25kg", "FB")}
                                             {renderInput("高分子", "25kg", "polymer")}
                                         </div>
-                                        <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold shadow-2xl mt-6 active:scale-[0.98] transition-all h-16 text-lg">{loading ? "同步中..." : "確認送出申請"}</button>
+                                        <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold shadow-2xl mt-6 active:scale-[0.98] transition-all h-16 text-lg">{loading ? "同步中..." : "確認送出配送申請"}</button>
                                     </form>
                                 )}
 
                                 {step === 3 && (
                                     <div className="text-center py-12 space-y-8 animate-in text-slate-800">
                                         <div className="text-emerald-500 flex justify-center scale-125"><div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center shadow-lg"><Icons.CheckCircle /></div></div>
-                                        <div><h2 className="text-3xl font-black">送出成功！</h2><p className="text-slate-500 mt-3 font-medium px-4 leading-relaxed text-sm">資料已同步至管理表格。</p></div>
+                                        <div><h2 className="text-3xl font-black">送出成功！</h2><p className="text-slate-500 mt-3 font-medium px-4 leading-relaxed text-sm">資料已同步至試算表。</p></div>
                                         <button onClick={() => { setFormData({...formData, K1:0,L1:0,MC2:0,S1:0,brownCarbon:0,blackCarbon:0,FB:0,polymer:0}); setStep(1); }} className="w-full bg-slate-800 text-white py-5 rounded-2xl font-bold active:scale-95 transition-all h-16 shadow-lg">返回首頁</button>
                                     </div>
                                 )}
@@ -271,12 +281,16 @@
                                             {historyData.length === 0 ? <p className="text-center py-20 text-slate-400 italic font-medium">目前查無紀錄</p> : 
                                                 historyData.map((item, i) => (
                                                     <div key={i} className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm">
-                                                        <div className="font-black text-indigo-600 mb-3 border-b border-slate-50 pb-2 flex justify-between"><span className="text-sm">{item.timestamp}</span><span className="text-[10px] text-slate-300">#{(historyData.length - i)}</span></div>
+                                                        <div className="font-black text-indigo-600 mb-3 border-b border-slate-50 pb-2 flex justify-between"><span className="text-sm">{item.timestamp}</span><span className="text-[10px] text-slate-300 font-sans tracking-tighter">ORDER #{(historyData.length - i)}</span></div>
                                                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-slate-600 font-bold">
-                                                            {item.K1 > 0 && <span>K1: {item.K1} 桶</span>} {item.L1 > 0 && <span>L1: {item.L1} 桶</span>}
-                                                            {item.MC2 > 0 && <span>MC2: {item.MC2} 桶</span>} {item.S1 > 0 && <span>S1: {item.S1} 桶</span>}
-                                                            {item.brownCarbon > 0 && <span>牛皮紙: {item.brownCarbon} 包</span>} {item.blackCarbon > 0 && <span>黑色: {item.blackCarbon} 包</span>}
-                                                            {item.FB > 0 && <span>FB: {item.FB} 包</span>} {item.polymer > 0 && <span>高分子: {item.polymer} 包</span>}
+                                                            {item.K1 > 0 && <span className="flex justify-between border-b border-slate-50 pb-1">K1: <span className="text-indigo-600">{item.K1}</span></span>}
+                                                            {item.L1 > 0 && <span className="flex justify-between border-b border-slate-50 pb-1">L1: <span className="text-indigo-600">{item.L1}</span></span>}
+                                                            {item.MC2 > 0 && <span className="flex justify-between border-b border-slate-50 pb-1">MC2: <span className="text-indigo-600">{item.MC2}</span></span>}
+                                                            {item.S1 > 0 && <span className="flex justify-between border-b border-slate-50 pb-1">S1: <span className="text-indigo-600">{item.S1}</span></span>}
+                                                            {item.brownCarbon > 0 && <span className="flex justify-between border-b border-slate-50 pb-1">牛皮紙: <span className="text-slate-800">{item.brownCarbon}</span></span>}
+                                                            {item.blackCarbon > 0 && <span className="flex justify-between border-b border-slate-50 pb-1">黑色: <span className="text-slate-800">{item.blackCarbon}</span></span>}
+                                                            {item.FB > 0 && <span className="flex justify-between border-b border-slate-50 pb-1">FB: <span className="text-slate-800">{item.FB}</span></span>}
+                                                            {item.polymer > 0 && <span className="flex justify-between border-b border-slate-50 pb-1">高分子: <span className="text-slate-800">{item.polymer}</span></span>}
                                                         </div>
                                                     </div>
                                                 ))
